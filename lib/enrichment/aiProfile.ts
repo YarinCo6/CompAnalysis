@@ -55,7 +55,7 @@ Respond ONLY with a valid JSON object (no markdown, no explanation):
   }
 
   // No AI key — compute stats manually
-  return computeManualStats(matchHistory)
+  return computeManualStats(name, matchHistory)
 }
 
 async function callOpenAI(prompt: string, apiKey: string): Promise<AIProfileResult> {
@@ -133,7 +133,7 @@ function parseAIResponse(text: string): AIProfileResult {
   }
 }
 
-function computeManualStats(matchHistory: MatchResult[]): AIProfileResult {
+function computeManualStats(name: string, matchHistory: MatchResult[]): AIProfileResult {
   const total = matchHistory.length
   if (total === 0) return INSUFFICIENT_DATA
 
@@ -150,11 +150,16 @@ function computeManualStats(matchHistory: MatchResult[]): AIProfileResult {
   else if (winRate < 0.4) dominantStyle = "defensive"
   else dominantStyle = "points-based"
 
+  const patterns: string[] = []
+  if (submissions > 0) patterns.push(`${submissions} submission win${submissions > 1 ? "s" : ""} recorded`)
+  if (winRate >= 0.7) patterns.push("High win rate — dominant competitor")
+  else if (winRate <= 0.3) patterns.push("Primarily accumulates experience at this level")
+
   return {
-    summary: `Based on ${total} recorded matches, ${name} has a ${Math.round(winRate * 100)}% win rate with ${Math.round(submissionRate * 100)}% of wins by submission.`,
+    summary: `Based on ${total} recorded matches, ${name} holds a ${Math.round(winRate * 100)}% win rate with ${Math.round(submissionRate * 100)}% of wins by submission.`,
     submissionRate,
     winRate,
     dominantStyle,
-    notablePatterns: []
+    notablePatterns: patterns
   }
 }
