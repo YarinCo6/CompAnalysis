@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model EventCache {
+  id           String   @id @default(cuid())
+  smoothcompId String   @unique
+  name         String
+  date         DateTime
+  org          String
+  location     String
+  data         Json
+  cachedAt     DateTime @default(now())
+}
+
+model CompetitorCache {
+  id           String   @id @default(cuid())
+  smoothcompId String
+  name         String
+  category     String
+  team         String
+  matchHistory Json
+  cachedAt     DateTime @default(now())
+
+  @@unique([smoothcompId, name])
+}
+
+model ProfileCache {
+  id              String   @id @default(cuid())
+  competitorName  String   @unique
+  instagramUrl    String?
+  youtubeUrl      String?
+  notableVideoUrl String?
+  styleProfile    String
+  submissionRate  Float?
+  winRate         Float?
+  cachedAt        DateTime @default(now())
+}
