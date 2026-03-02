@@ -8,7 +8,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: file:/data/prod.db
+        value: file:/tmp/prod.db
       - key: NEXTAUTH_URL
         sync: false
       - key: NEXTAUTH_SECRET
@@ -17,7 +17,3 @@ services:
         sync: false
       - key: APP_PASSWORD
         sync: false
-    disk:
-      name: bjj-scout-db
-      mountPath: /data
-      sizeGB: 1
