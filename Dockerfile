@@ -12,19 +12,21 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (skip Playwright browser download during npm install)
-RUN npm install
+# Install dependencies
+RUN npm install 2>&1 && echo "=== npm install OK ==="
 
-# Install Chromium + all its system deps via Playwright
-RUN npx playwright install --with-deps chromium
+# Install Chromium + system deps
+RUN npx playwright install --with-deps chromium 2>&1 && echo "=== playwright OK ==="
 
 # Copy source
 COPY . .
 
-# Generate Prisma client and build Next.js
-RUN npx prisma generate && npm run build
+# Generate Prisma client
+RUN npx prisma generate 2>&1 && echo "=== prisma generate OK ==="
+
+# Build Next.js (separate step for clearer error messages)
+RUN npm run build 2>&1 && echo "=== next build OK ==="
 
 EXPOSE 3000
 
-# Startup: init DB then start server
 CMD ["sh", "-c", "npx prisma db push --skip-generate && npm start"]
