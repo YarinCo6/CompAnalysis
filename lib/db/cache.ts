@@ -40,21 +40,24 @@ export async function setCachedEvent(data: {
   location: string
   data: object
 }) {
+  const serialized = {
+    ...data,
+    data: JSON.stringify(data.data)
+  }
   return prisma.eventCache.upsert({
     where: { smoothcompId: data.smoothcompId },
-    update: { ...data, cachedAt: new Date() },
-    create: data
+    update: { ...serialized, cachedAt: new Date() },
+    create: serialized
   })
 }
 
 export async function searchCachedEvents(query: string) {
-  const normalised = query.toLowerCase()
-  const all = await prisma.eventCache.findMany()
-  return all.filter(
-    (e) =>
-      e.name.toLowerCase().includes(normalised) &&
-      !isStale(e.cachedAt, TTL.EVENT)
-  )
+  return prisma.eventCache.findMany({
+    where: {
+      name: { contains: query },
+      cachedAt: { gt: new Date(Date.now() - TTL.EVENT) }
+    }
+  })
 }
 
 // ─── Competitor Cache ────────────────────────────────────────────────────────
@@ -77,9 +80,15 @@ export async function setCachedCompetitors(
     matchHistory: object
   }>
 ) {
-  await prisma.competitorCache.deleteMany({ where: { smoothcompId } })
-  return prisma.competitorCache.createMany({
-    data: competitors.map((c) => ({ smoothcompId, ...c }))
+  return prisma.$transaction(async (tx) => {
+    await tx.competitorCache.deleteMany({ where: { smoothcompId } })
+    return tx.competitorCache.createMany({
+      data: competitors.map((c) => ({
+        smoothcompId,
+        ...c,
+        matchHistory: JSON.stringify(c.matchHistory)
+      }))
+    })
   })
 }
 

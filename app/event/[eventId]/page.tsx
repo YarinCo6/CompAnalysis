@@ -45,17 +45,13 @@ export default function EventPage() {
       setError("")
 
       try {
-        // Load event info from cache or search
-        const eventRes = await fetch(`/api/search-event`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ query: eventId })
-        })
+        // Load event info and competitors in parallel
+        const [eventRes, compRes] = await Promise.all([
+          fetch(`/api/event?id=${eventId}`),
+          fetch(`/api/competitors?eventId=${eventId}`)
+        ])
 
-        // Load competitors
-        const compRes = await fetch(`/api/competitors?eventId=${eventId}`)
         const compData = await compRes.json()
-
         if (!compRes.ok) {
           throw new Error(compData.error || "Failed to load competitors")
         }
@@ -63,15 +59,15 @@ export default function EventPage() {
         setCompetitors(compData.competitors || [])
         setCategories(compData.categories || [])
 
-        // Try to set event info from stored cache
-        const eventData: EventData = {
+        // Set event info from cache
+        const eventData = eventRes.ok ? (await eventRes.json()).event : null
+        setEvent({
           id: eventId,
-          name: compData.eventName || `Event ${eventId}`,
-          date: compData.eventDate || "",
-          org: compData.eventOrg || "",
-          location: compData.eventLocation || ""
-        }
-        setEvent(eventData)
+          name: eventData?.name || `Event ${eventId}`,
+          date: eventData?.date || "",
+          org: eventData?.org || "",
+          location: eventData?.location || ""
+        })
       } catch (err) {
         setError((err as Error).message || "Failed to load event data")
       } finally {
@@ -120,7 +116,7 @@ export default function EventPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h1 className="text-xl font-semibold text-[#f0f0f0]">
-                    Event {eventId}
+                    {event?.name || `Event ${eventId}`}
                   </h1>
                   {event?.org && (
                     <p className="text-sm text-[#a0a0a0] mt-0.5">{event.org}</p>

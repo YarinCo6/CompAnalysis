@@ -100,10 +100,8 @@ export default function CompetitorProfilePage() {
             </div>
 
             {/* Social Links */}
-            {(profile.instagramUrl || profile.youtubeUrl || profile.notableVideoUrl ||
-              !profile.instagramUrl || !profile.youtubeUrl) && (
-              <div className="flex flex-wrap gap-2">
-                {profile.instagramUrl ? (
+            <div className="flex flex-wrap gap-2">
+              {profile.instagramUrl ? (
                   <a
                     href={profile.instagramUrl}
                     target="_blank"
@@ -160,8 +158,7 @@ export default function CompetitorProfilePage() {
                     Watch Notable Match
                   </a>
                 )}
-              </div>
-            )}
+            </div>
 
             {/* Analytics */}
             <ProfileAnalytics

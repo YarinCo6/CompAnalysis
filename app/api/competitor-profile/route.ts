@@ -37,9 +37,13 @@ export async function GET(req: NextRequest) {
       const competitor = competitors?.find(
         (c) => c.name.toLowerCase() === name.toLowerCase()
       )
-      // matchHistory stored as JSON — may contain profileUrl if we stored it
-      const mh = competitor?.matchHistory as { profileUrl?: string } | null
-      profileUrl = mh?.profileUrl
+      // matchHistory stored as JSON string — may contain profileUrl if we stored it
+      try {
+        const mh = competitor?.matchHistory ? JSON.parse(competitor.matchHistory as string) : null
+        profileUrl = mh?.profileUrl
+      } catch {
+        // ignore parse errors
+      }
     }
 
     // Fetch match history

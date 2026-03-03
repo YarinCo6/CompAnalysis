@@ -14,7 +14,7 @@ model EventCache {
   date         DateTime
   org          String
   location     String
-  data         Json
+  data         String
   cachedAt     DateTime @default(now())
 }
 
@@ -24,7 +24,7 @@ model CompetitorCache {
   name         String
   category     String
   team         String
-  matchHistory Json
+  matchHistory String
   cachedAt     DateTime @default(now())
 
   @@unique([smoothcompId, name])
