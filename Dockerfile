@@ -8,6 +8,12 @@ RUN apt-get update && apt-get install -y curl && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
+# Default env vars (override at runtime via HF Space / Render settings)
+ENV DATABASE_URL=file:/tmp/prod.db
+ENV NEXTAUTH_URL=http://localhost:3000
+ENV NEXTAUTH_SECRET=default-change-me-in-production
+ENV NODE_ENV=production
+
 # Copy package files
 COPY package*.json ./
 
