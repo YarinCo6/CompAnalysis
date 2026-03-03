@@ -40,24 +40,22 @@ export async function setCachedEvent(data: {
   location: string
   data: object
 }) {
-  const serialized = {
-    ...data,
-    data: JSON.stringify(data.data)
-  }
+  const payload = { ...data, data: JSON.stringify(data.data) }
   return prisma.eventCache.upsert({
     where: { smoothcompId: data.smoothcompId },
-    update: { ...serialized, cachedAt: new Date() },
-    create: serialized
+    update: { ...payload, cachedAt: new Date() },
+    create: payload
   })
 }
 
 export async function searchCachedEvents(query: string) {
-  return prisma.eventCache.findMany({
-    where: {
-      name: { contains: query },
-      cachedAt: { gt: new Date(Date.now() - TTL.EVENT) }
-    }
-  })
+  const normalised = query.toLowerCase()
+  const all = await prisma.eventCache.findMany()
+  return all.filter(
+    (e) =>
+      e.name.toLowerCase().includes(normalised) &&
+      !isStale(e.cachedAt, TTL.EVENT)
+  )
 }
 
 // ─── Competitor Cache ────────────────────────────────────────────────────────
@@ -68,7 +66,8 @@ export async function getCachedCompetitors(smoothcompId: string) {
   })
   if (!records.length) return null
   if (isStale(records[0].cachedAt, TTL.COMPETITOR)) return null
-  return records
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return records.map((r) => ({ ...r, matchHistory: JSON.parse(r.matchHistory) as any }))
 }
 
 export async function setCachedCompetitors(
@@ -77,18 +76,20 @@ export async function setCachedCompetitors(
     name: string
     category: string
     team: string
+    profileUrl?: string
     matchHistory: object
   }>
 ) {
-  return prisma.$transaction(async (tx) => {
-    await tx.competitorCache.deleteMany({ where: { smoothcompId } })
-    return tx.competitorCache.createMany({
-      data: competitors.map((c) => ({
-        smoothcompId,
-        ...c,
-        matchHistory: JSON.stringify(c.matchHistory)
-      }))
-    })
+  await prisma.competitorCache.deleteMany({ where: { smoothcompId } })
+  return prisma.competitorCache.createMany({
+    data: competitors.map((c) => ({
+      smoothcompId,
+      name: c.name,
+      category: c.category,
+      team: c.team,
+      profileUrl: c.profileUrl || "",
+      matchHistory: JSON.stringify(c.matchHistory)
+    }))
   })
 }
 

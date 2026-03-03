@@ -24,6 +24,7 @@ model CompetitorCache {
   name         String
   category     String
   team         String
+  profileUrl   String   @default("")
   matchHistory String
   cachedAt     DateTime @default(now())
 

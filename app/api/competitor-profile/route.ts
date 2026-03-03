@@ -30,20 +30,15 @@ export async function GET(req: NextRequest) {
       })
     }
 
-    // Find competitor's profile URL from competitor cache
+    // Find competitor's Smoothcomp profile URL from cache
     let profileUrl: string | undefined
     if (eventId) {
       const competitors = await getCachedCompetitors(eventId)
       const competitor = competitors?.find(
         (c) => c.name.toLowerCase() === name.toLowerCase()
       )
-      // matchHistory stored as JSON string — may contain profileUrl if we stored it
-      try {
-        const mh = competitor?.matchHistory ? JSON.parse(competitor.matchHistory as string) : null
-        profileUrl = mh?.profileUrl
-      } catch {
-        // ignore parse errors
-      }
+      const raw = competitor as Record<string, unknown> | undefined
+      profileUrl = (typeof raw?.profileUrl === "string" && raw.profileUrl) ? raw.profileUrl : undefined
     }
 
     // Fetch match history
