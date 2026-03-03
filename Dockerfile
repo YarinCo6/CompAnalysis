@@ -2,32 +2,21 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Install Playwright system deps + Chromium only (much smaller than full Playwright image)
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-      ca-certificates fonts-liberation libasound2 libatk-bridge2.0-0 \
-      libatk1.0-0 libcups2 libdbus-1-3 libdrm2 libgbm1 libgtk-3-0 \
-      libnspr4 libnss3 libx11-xcb1 libxcomposite1 libxdamage1 \
-      libxrandr2 xdg-utils libxshmfence1 libglu1-mesa libpango-1.0-0 \
-      libcairo2 && \
-    rm -rf /var/lib/apt/lists/*
-
 # Default env vars (override at runtime via HF Space / Render settings)
 ENV DATABASE_URL=file:/tmp/prod.db
 ENV NEXTAUTH_URL=http://localhost:3000
 ENV NEXTAUTH_SECRET=default-change-me-in-production
 ENV NODE_ENV=production
-ENV PLAYWRIGHT_BROWSERS_PATH=/app/.cache/ms-playwright
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies (skip browser download, we install separately)
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+# Install dependencies (skip Playwright browser download during npm install)
 RUN npm install
 
-# Install only Chromium browser for Playwright
-RUN npx playwright install chromium
+# Install Chromium + all its system deps via Playwright
+RUN npx playwright install --with-deps chromium
 
 # Copy source
 COPY . .
